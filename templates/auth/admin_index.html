@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="Tooplate">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap" rel="stylesheet">
+  <title>NEPASHRAY</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/font-awesome.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'assets/css/owl-carousel.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/tooplate-artxibition.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:300,400" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet" />
+  <style>
+     .sidebar {
+        margin: 0;
+        padding: 0;
+        width: 200px;
+        background-color: #f1f1f1;
+        position: fixed;
+        height: 100%;
+        overflow: auto;
+      }
+      
+      .sidebar a {
+        display: block;
+        color: black;
+        padding: 16px;
+        text-decoration: none;
+      }
+       
+      .sidebar a.active {
+        background-color: #04AA6D;
+        color: white;
+      }
+      
+      .sidebar a:hover:not(.active) {
+        background-color: #555;
+        color: white;
+      }
+      
+      div.content {
+        margin-left: 200px;
+        padding: 1px 16px;
+        height: 1000px;
+      }
+      
+      @media screen and (max-width: 700px) {
+        .sidebar {
+          width: 100%;
+          height: auto;
+          position: relative;
+        }
+        .sidebar a {float: left;}
+        div.content {margin-left: 0;}
+      }
+      
+      @media screen and (max-width: 400px) {
+        .sidebar a {
+          text-align: center;
+          float: none;
+        }
+      }
+  </style>
+</head>
+<body>
+  
+<header class="header-area header-sticky">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav class="main-nav">
+                    <a href="{% url 'index' %}" class="logo">NEP<em>आश्रय</em></a>
+                    <ul class="nav">
+                        {% if user.is_authenticated %}
+                        <button class="contactbutton" style="margin-left: 10px;"> <a href="{% url 'signout' %}"">Log out <i class="fa fa-arrow-right"></i></a></button>
+                        {% endif %}
+                    </ul>        
+                    <a class='menu-trigger'>
+                        <span>Menu</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+<div class="sidebar">
+    <a class="active" id="refreshButton"="#home">Dashboard</a>
+    <script>
+        document.getElementById("refreshButton").addEventListener("click", function() {
+            location.reload();  // Reload the current page
+        });
+    </script>
+    {% if user.is_authenticated and user.is_staff %}
+    <a href="{% url 'manage_user'  %}">Manage Users</a>
+    <a href="{% url 'admin_contacts' %}">Contacts</a>
+    <a href="{% url 'create_post' %}">Create a Post</a>
+    <a href="{% url 'listofpost' %}">View post</a>
+
+
+    {% elif user.is_authenticated and not user.is_staff %}
+    <a href="{% url 'create_post' %}">Create a Post</a>
+    <a href="{% url 'listofpost' %}">View post</a>
+
+
+    {% endif %}
+    <a href="{% url 'signout' %}">Logout</a>
+</div>
+
+
+
+
+
+{% if user.is_authenticated and user.is_staff %}
+<div class="content">
+    <h2><b>Hello {{username|upper}}</b></h2>
+    <p>Here the user's latest post and authority will be examined.</p>
+    <div class="container">
+        <div class="row">
+            <div class="card text-white bg-primary col-md-3 d-flex" >
+                <div class="card-header">Posts</div>
+                <div class="card-body">
+                  <h3 class="card-title">{{number_of_total_posts}}</h3>
+                </div>
+            </div>
+            <div class="card text-white bg-secondary col-md-3 d-flex" >
+                <div class="card-header">Views</div>
+                <div class="card-body">
+                  <h3 class="card-title">{{total_likes}}</h3>
+                </div>
+            </div>
+            <div class="card text-white bg-success col-md-3 d-flex" >
+                <div class="card-header">Comments</div>
+                <div class="card-body">
+                  <h3 class="card-title">{{number}}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br><br>
+    <h2>Unverified Posts</h2>
+    <br>
+    <table class="table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Post Title</th>
+            <th scope="col">Genre</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in unverified_posts %}
+          <tr>
+            <td>{{post.author}}</td>
+            <td>{{post.title | slice:50 }}</td>
+            <td>
+              {% for category in post.category.all %}
+                {{ category.name }} 
+                {% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+            <td>
+              <form action="{% url 'verify_post' post.id %}" method="post" id="postForm">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success" onclick="confirmpost()" style="margin: 0; ">Post</button> 
+                <script>
+                  function confirmpost() {
+                    if (confirm("Are you sure you want to post this?")) {
+            document.getElementById("postForm").submit();
+        } else {
+            return false;
+        }
+                  }
+                </script>
+              </form>
+              <br>
+              <form action="{% url 'block_post' post.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" onclick="confirmdelete()"  style="margin-top: -10px;">Block</button>
+                <script>
+                  function confirmdelete() {
+                    confirm("Are you sure you want to block this post?")
+                  }
+                </script>
+              </form>
+              <form action="{% url 'view_post' post.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary" style="margin-top: 10px;">View</button>
+              </form>
+            </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% elif user.is_authenticated and not user.is_staff %}
+<div class="content">
+    <h2><b>Hello {{username|upper}}</b></h2>
+    <p>Here the user's latest post and authority will be examined.</p>
+    <div class="card">
+      <h5 class="card-header">Create a New Post</h5>
+      <div class="card-body">
+        <h5 class="card-title">Start writing your post in just seconds</h5>
+        <p class="card-text">We are here to encourage your blogging experience!</p>
+        <a href="{% url 'create_post' %}" class="btn btn-primary">Lets Start</a>
+      </div>
+    </div>
+    <div class="container">
+        <div class="row">
+          <div class="card text-white bg-primary col-md-3 d-flex" >
+            <div class="card-header">My Posts</div>
+            <div class="card-body">
+              <h3 class="card-title">{{number_of_total_posts}}</h3>
+            </div>
+          </div>
+          <div class="card text-white bg-secondary col-md-3 d-flex" >
+            <div class="card-header">Views</div>
+            <div class="card-body">
+              <h3 class="card-title">{{total_likes}}</h3>
+            </div>
+          </div>
+          <div class="card text-white bg-success col-md-3 d-flex" >
+            <div class="card-header">My Comments</div>
+            <div class="card-body">
+              <h3 class="card-title">{{number}}</h3>
+            </div>
+          </div>
+        </div>
+    </div>
+    <table class="table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Post Title</th>
+            <th scope="col">Genre</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in my_post %}
+          <tr>
+            <td>{{post.title | slice:50}}</td>
+            <td>{% for category in post.category.all %}
+              {{ category.name }} 
+              {% if not forloop.last %}, {% endif %}
+            {% endfor %}</td>
+            <td><form action="{% url 'block_post' post.id %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger" onclick="confirmdelete()">Delete</button>
+              <script>
+                function confirmdelete() {
+                  confirm("Are you sure you want to delete this post?");
+                }
+              </script>
+            </form></td>
+
+          </tr>
+          {% endfor %}
+          <!-- <tr>
+            <td>Art in Style : Lalitpur</td>
+            <td>Art & Culture</td>
+            <td>2024/09/10</td>
+          </tr>
+          <tr>
+            <td>Trials with wooden textures</td>
+            <td>Art & Culture</td>
+            <td>2024/09/10</td>
+          </tr> -->
+        </tbody>
+    </table>
+</div>
+{% endif %}
+<!-- <footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="address">
+                    <h4>OFFICE ADDRESS</h4>
+                    <span>Newroad, Kathmandu<br>Nepal.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer> -->
+<script src="assets/js/jquery-2.1.0.min.js"></script>
+<script src="assets/js/popper.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/scrollreveal.min.js"></script>
+<script src="assets/js/waypoints.min.js"></script>
+<script src="assets/js/jquery.counterup.min.js"></script>
+<script src="assets/js/imgfix.min.js"></script> 
+<script src="assets/js/mixitup.js"></script> 
+<script src="assets/js/accordions.js"></script>
+<script src="assets/js/owl-carousel.js"></script>
+<script src="assets/js/custom.js"></script>
+</body>
+</html>
